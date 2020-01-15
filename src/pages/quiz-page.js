@@ -4,19 +4,32 @@ import './quiz-page.css'
 
 import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
-import { Jumbotron } from 'react-bootstrap';
+import { Jumbotron, Form } from 'react-bootstrap';
 
 function QuestionHeader(props) {
     return <h2 className="display-3">What would you answer to this question ({props.id})?</h2>
 }
 
-class AnswerForm extends Component {
+class TextForm extends Component {
+    state = { value: '' }
+
     constructor(props) {
         super(props);
 
         this.state = { value: '' };
 
-        this.handleSubmit = this.handleSubmit.bind(this);
+        this.onChange = this.onChange.bind(this);
+    }
+
+    onChange(event) {
+        this.setState({ value: event.target.value });
+        this.props.handleUpdate(this.state);
+    }
+
+    render() {
+        return (<>
+            <Form.Control as="textarea" rows="10" placeholder="Your answer" onChange={this.onChange} />
+        </>);
     }
 }
 
@@ -28,15 +41,17 @@ export default class QuizPage extends Component {
             current_question: 1,
             num_questions: 5,
             time_remaining: props.time_limit, // 3 minutes
+            answer_text: '',
         }
 
         // method/this binds
         this.onClickSubmitButton = this.onClickSubmitButton.bind(this);
         this.restartTimer = this.restartTimer.bind(this);
         this.tickTimer = this.tickTimer.bind(this);
-        this.triggerNextQuestion = this.triggerNextQuestion.bind(this);
         this.stopTimer = this.stopTimer.bind(this);
+        this.triggerNextQuestion = this.triggerNextQuestion.bind(this);
         this.triggerQuizCompletion = this.triggerQuizCompletion.bind(this);
+        this.handleAnswerChange = this.handleAnswerChange.bind(this);
     };
 
     componentDidMount() {
@@ -81,6 +96,7 @@ export default class QuizPage extends Component {
     }
 
     triggerNextQuestion() {
+        console.log(this.state.answer_text);
         this.setState({ current_question: this.state.current_question + 1 });
         this.restartTimer();
     }
@@ -99,6 +115,10 @@ export default class QuizPage extends Component {
         }
     }
 
+    handleAnswerChange(childState) {
+        this.setState({ answerText: childState.value });
+    }
+
     render() {
         return (
             <Jumbotron className="centered">
@@ -107,7 +127,8 @@ export default class QuizPage extends Component {
                 <strong className="centered">{this.formatTimeRemaining(this.state.time_remaining)}</strong>
                 <QuestionHeader id={this.state.current_question} />
                 <hr />
-                <Button variant="primary" size="lg" onClick={this.onClickSubmitButton}>
+                <TextForm handleUpdate={this.handleAnswerChange} />;
+                <Button variant="primary" size="lg" dataDisableWith="Next" onClick={this.onClickSubmitButton}>
                     {this.state.current_question == this.state.num_questions ? "Finish" : "Submit"}
                 </Button>
             </Jumbotron>
